@@ -13,8 +13,6 @@ the top directory of the project, or the URL
 ⟨[https://creativecommons.org/publicdomain/zero/1.0/][CC0URL]⟩, for a
 copy of the CC0 dedication.
 
-## References
-
 [CC0FILE]: COPYING
 
 [CC0URL]: https://creativecommons.org/publicdomain/zero/1.0/
