@@ -1,0 +1,429 @@
+%%% LaTeX style file for my notes on books and films
+
+%% ===================================================================
+%% Preamble
+%% ===================================================================
+
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesExplPackage
+  {notes}
+  {2024-07-27}
+  {0.1.0}
+  {LaTeX style for my notes on books and films}
+
+%% ===================================================================
+%% Fonts
+%% ===================================================================
+
+\RequirePackage { newpxtext }
+\RequirePackage [ scaled = 0.95 ] { inconsolata }
+
+%% I will use the newpxmath package for mathematics fonts, and the
+%% amsthm and thmtools packages for typesetting theorems.  According
+%% to the newpxmath documentation, amsmath must be loaded before
+%% amsthm, and amsthm must be loaded before newpxmath.
+
+\RequirePackage [ leqno ] { amsmath }
+\RequirePackage { amsthm }
+\RequirePackage { thmtools }
+
+\RequirePackage [ vvarbb ] { newpxmath }
+\RequirePackage [ cal = rsfso ] { mathalpha }
+
+%% ===================================================================
+%% Page layout
+%% ===================================================================
+
+\RequirePackage [
+  paperheight = 7.9 in,
+  paperwidth = 4.5 in,
+  top = 0.2 in,
+  bottom = 0.2 in,
+  inner = 0.2 in,
+  outer = 0.2 in,
+  bindingoffset = 0 in,
+  includehead = true,
+  headheight = 15 pt,
+  headsep = \baselineskip,
+  twoside = false
+]
+  { geometry }
+
+%% ===================================================================
+%% Page headers and footers
+%% ===================================================================
+
+\RequirePackage { fancyhdr }
+\pagestyle { fancy }
+\fancyhf {}
+
+\fancyhead [ L ]
+  {
+    \nouppercase { \leftmark }
+    \nouppercase { \rightmark }
+  }
+
+\fancyhead [ R ] { \thepage }
+
+\AddToHook { cmd / section / before }
+  { \clearpage }
+
+\cs_gset:cpn { sectionmark } #1
+  {
+    \markboth { \thesection.~#1 } {}
+  }
+
+\cs_gset:cpn { subsectionmark } #1
+  {
+    \markright {~\textbar{}~\thesubsection.~#1 }
+  }
+
+%% ===================================================================
+%% Title page
+%% ===================================================================
+
+\RequirePackage { titling }
+
+\AfterEndEnvironment { titlingpage }
+  {
+    \stepcounter { page }
+  }
+
+%% ===================================================================
+%% Mathematics Subject Classification
+%% ===================================================================
+
+\NewDocumentCommand \mscnumbers
+  { m }
+  {
+    \par
+    \medskip
+    \textit{2020~Mathematics~Subject~Classification}:~
+    \clist_set:cn { l_tmpa_clist } {#1}
+    \clist_clear:c { l_tmpb_clist }
+    \clist_map_inline:cn { l_tmpa_clist }
+      {
+        \clist_put_right:cn { l_tmpb_clist }
+          {
+            \hrefurl { https://zbmath.org/classification/?q=cc\%3A##1 } {##1}
+          }
+      }
+    \clist_use:cn { l_tmpb_clist } { ,~ }
+  }
+
+%% ===================================================================
+%% GitHub topics
+%% ===================================================================
+
+\NewDocumentCommand \ghtopics
+  { m }
+  {
+    \hypersetup { pdfkeywords = {#1} }
+    \par
+    \medskip
+    \textit{GitHub ~ topics}: ~
+    \clist_set:cn { l_tmpa_clist } {#1}
+    \clist_clear:c { l_tmpb_clist }
+    \clist_map_inline:cn { l_tmpa_clist }
+      {
+        \clist_put_right:cn { l_tmpb_clist }
+          {
+            \hrefurl { https://github.com/topics/##1 } {##1}
+          }
+      }
+    \clist_use:cn { l_tmpb_clist } { , ~ }
+  }
+
+%% ===================================================================
+%% Table of contents
+%% ===================================================================
+
+\RequirePackage { tocloft }
+
+\tocloftpagestyle { fancy }
+
+\cs_gset:cpn { cftmarktoc }
+  {
+    \markboth { Contents } {}
+  }
+
+%% ===================================================================
+%% Appendices
+%% ===================================================================
+
+\RequirePackage [ toc ] { appendix }
+
+%% ===================================================================
+%% Bibliography
+%% ===================================================================
+
+\RequirePackage
+  [
+    alldates = iso,
+    backref = true,
+    backrefstyle = none,
+    block = par,
+    seconds = true,
+    style = authoryear,
+    useprefix = true,
+    datamodel = bookfilm
+  ]
+  { biblatex }
+
+\DeclareFieldFormat { zbmathopen }
+  {
+    zbMATH~Open
+    \addcolon \addspace
+    \ifhyperref
+      {
+        \href
+          { https://zbmath.org/#1 }
+          {#1}
+      }
+      {#1}
+    \addspace
+  }
+
+\RequirePackage { xpatch }
+
+\ExplSyntaxOff
+\xpatchbibdriver{book}
+  {\usebibmacro{publisher+location+date}}
+  {\usebibmacro{publisher+location+date}%
+   \newunit\newblock
+   \printfield{zbmathopen}%
+   \newunit\newblock}
+  {}
+  {}
+
+\xpatchbibdriver{article}
+  {\usebibmacro{doi+eprint+url}}
+  {\usebibmacro{doi+eprint+url}%
+   \newunit\newblock
+   \printfield{zbmathopen}%
+   \newunit\newblock}
+  {}
+  {}
+\ExplSyntaxOn
+
+\setcounter { biburllcpenalty }
+  { 9000 }
+
+\renewbibmacro { pageref }
+  {
+    \iflistundef { pageref }
+      {
+        \printtext
+          [ parens ]
+          { not~cited }
+      }
+      {
+        \printtext
+          [ parens ]
+          {
+            \ifnumgreater { \value { pageref } } {1}
+              {
+                \bibstring { backrefpages }
+                \ppspace
+              }
+              {
+                \bibstring { backrefpage }
+                \ppspace
+              }
+            \printlist
+              [ pageref ]
+              [ - \value { listtotal } ]
+              { pageref }
+          }
+      }
+  }
+
+\DefineBibliographyStrings
+  { english }
+  {
+    backrefpage = { cited~on~p \adddot },
+    backrefpages = { cited~on~pp \adddot },
+    urlseen = { seen }
+  }
+
+\defbibheading { mybibliography }
+  [ \bibname ]
+  {
+    \section* {#1}
+    \markboth {#1} {}
+    \addcontentsline { toc }{ section } {#1}
+  }
+
+\NewDocumentCommand \bibsection
+  { O{References} }
+  {
+    \clearpage
+    \phantomsection
+    \printbibliography
+      [
+        heading = mybibliography,
+        title = #1
+      ]
+  }
+
+\dim_gset:cn { bibitemsep } { 2 \itemsep }
+
+%% ===================================================================
+%% Dummy text
+%% ===================================================================
+
+\RequirePackage { lipsum }
+
+%% ===================================================================
+%% Hypertext
+%% ===================================================================
+
+\RequirePackage { url }
+\urlstyle { same }
+\RequirePackage [ numbered ]{ bookmark }
+\RequirePackage { hyperref }
+\hypersetup { hypertexnames = false }
+\hypersetup { colorlinks = true }
+% https://tex.stackexchange.com/a/632828
+\hypersetup { allcolors = blue }
+\hypersetup { pdflang = { en } }
+
+%% https://tex.stackexchange.com/a/192363
+\cs_gset:cpn { hrefurl }
+  { \hyper@normalise \hrefurl@ }
+\cs_gset:cpn { hrefurl@ } #1#2
+ { \hyper@linkurl {#2} {#1} }
+
+%% ===================================================================
+%% Cross-references
+%% ===================================================================
+
+\RequirePackage { cleveref }
+
+%% ===================================================================
+%% Commutative diagrams
+%% ===================================================================
+
+\RequirePackage [ all ] { xy }
+
+%% ===================================================================
+%% CC0 statement
+%% ===================================================================
+
+\NewDocumentCommand \cczero
+  {}
+  {
+    I~place~this~document~in~the~public~domain~through~the~Creative~
+    Commons~CC0~1.0~Universal~Public~Domain~Dedication,~and~waive~all~
+    copyright~and~related~rights~to~it.~See~
+    \url{http://creativecommons.org/publicdomain/zero/1.0/}~for~the~
+    CC0~dedication.
+  }
+
+%% ===================================================================
+%% Equations and theorems
+%% ===================================================================
+
+\numberwithin { equation } { subsection }
+
+\Crefformat{equation}{Equation~(#2#1#3)}
+\crefformat{equation}{equation~(#2#1#3)}
+
+\declaretheoremstyle
+  [
+    sibling = equation,
+    headfont = \normalfont,
+    headformat = { (\NUMBER) ~ \NAME \NOTE },
+    bodyfont = \thfamily
+  ]
+  {
+    mytheorem
+  }
+
+\declaretheorem
+  [
+    name = Theorem,
+    Refname = Theorem,
+    refname = theorem,
+    style = mytheorem
+  ]
+  { theorem }
+
+%% ===================================================================
+%% Exercises
+%% ===================================================================
+
+\declaretheoremstyle
+  [
+    sibling = equation,
+    preheadhook = {
+      \cs_set:cpn { theenumi } { \alph { enumi } }
+      \cs_set:cpn { labelenumi } { ( \theenumi ) }
+      \cs_set:cpn { theenumii } { \roman { enumii } }
+      \cs_set:cpn { labelenumii } { ( \theenumii ) }
+    },
+    headfont = \normalfont,
+    headformat = { (\NUMBER) \NOTE },
+    headpunct = {},
+    bodyfont = \rmfamily
+  ]
+  {
+    myexercise
+  }
+
+\declaretheorem
+  [
+    name = Exercise,
+    Refname = Exercise,
+    refname = exercise,
+    style = myexercise
+  ]
+  { exercise }
+
+%% ===================================================================
+%% Solutions
+%% ===================================================================
+
+\declaretheoremstyle
+  [
+    sibling = equation,
+    preheadhook = {
+      \cs_set:cpn { theenumi } { \alph { enumi } }
+      \cs_set:cpn { labelenumi } { ( \theenumi ) }
+      \cs_set:cpn { theenumii } { \roman { enumii } }
+      \cs_set:cpn { labelenumii } { ( \theenumii ) }
+    },
+    headfont = \normalfont,
+    headformat = { (\NUMBER) ~ Solution ~ to \NOTE },
+    bodyfont = \rmfamily
+  ]
+  {
+    mysolution
+  }
+
+\declaretheorem
+  [
+    name = Solution,
+    Refname = Solution,
+    refname = solution,
+    style = mysolution
+  ]
+  { solution }
+
+%% ===================================================================
+%% Macros for the text
+%% ===================================================================
+
+\NewDocumentCommand \firstterm
+  { m }
+  {
+    \emph {#1}
+  }
+
+%% End of file
+
+%% Local Variables:
+%% mode: fundamental
+%% tab-width: 2
+%% End:

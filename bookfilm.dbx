@@ -1,0 +1,3 @@
+\ProvidesFile{filmays.dbx}[2024/07/27 BibLaTeX data model for my notes on books and films]
+\DeclareDatamodelFields[type=field,datatype=verbatim]{zbmathopen}
+\DeclareDatamodelEntryfields{zbmathopen}
