@@ -1,7 +1,9 @@
-# Notes on books and films
+# Notes on this and that
 
-This project consists of my notes on books that I read, and on films
-that I watch.
+This project consists of my notes on this and that, such as the books
+that I read, and the films that I watch.  I also hope to write about
+the Himalaya: the Garhwal Himalaya, some of which I have seen, and
+near whose foothills I live.  The project is a work in progress.
 
 ## Copying
 
