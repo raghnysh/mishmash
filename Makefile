@@ -17,7 +17,8 @@ lpegexam.fnl: notes.tex
 
 .PHONY: clean
 clean:
-	if test -e notes.ltx; then latexmk -C -pdf -bibtex -e '$$clean_ext="fnl run.xml synctex.gz synctex.orig.gz"' notes.ltx; ${RM} notes.ltx; fi
+	if test -e notes.ltx; then latexmk -C -pdf -bibtex -e '$$clean_ext="run.xml synctex.gz synctex.orig.gz"' notes.ltx; ${RM} notes.ltx; fi
+	${RM} lpegexam.fnl
 
 .PHONY: upload
 upload:
