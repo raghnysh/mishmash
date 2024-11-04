@@ -577,8 +577,8 @@ pattern \(p\), whose value at any element \((s, i, \sigma)\) of
 \end{enumerate}
 The pattern \(p\) is denoted by \(R(\alpha)\).
 
-For example, if \(\alpha\) is the one-member sequence \(("09"\), and
-\(p\) the pattern \(R(\alpha\), then
+For example, if \(\alpha\) is the one-member sequence \(("09")\), and
+\(p\) the pattern \(R(\alpha)\), then
 \begin{align*}
   &p(\str{hello}) = p((\str{hello}, 1, ())) = \bot, \\
   &p((\str{hello,␣23B0}, 8, ())) = (\str{hello,␣23B0}, 9, ()), \\
@@ -676,7 +676,6 @@ For any string \textsf{string}, the function \textsf{lpeg.P} gives a
 pattern \textsf{(lpeg.P~string)}.  This is the \textsf{lpeg}
 equivalent of the string patterns of \Cref{sec:zn6czomy}.  It behaves
 as follows under the action of \textsf{lpeg.match}.
-
 \begin{codechunk}
 \nextchunklabel{chk:furq3t6m}
 <<lpegexam.fnl>>=
@@ -717,6 +716,118 @@ follows:
 @
 \end{codechunk}
 
+\subsubsection{Natural number patterns}
+\label{sec:ptcsj9xp}
+
+For any natural number \textsf{n}, \textsf{(lpeg.P~n)} is a pattern
+that is the \textsf{lpeg} equivalent of the natural number patterns
+described in \Cref{sec:amrbrlnv}.  It behaves as follows under the
+action of \textsf{lpeg.match}.
+\begin{codechunk}
+\nextchunklabel{chk:dmqu1wqv}
+<<lpegexam.fnl>>=
+(let [p1 (lpeg.P 1)
+      p3 (lpeg.P 3)]
+  (assert (= (p1:match "") nil))
+  (assert (= (p3:match "hello") 4))
+  (assert (= (p3:match "hello" 3) 6)))
+@
+\end{codechunk}
+
+\subsubsection{Negative integer patterns}
+\label{sec:owdg0noo}
+
+If \textsf{n} is a negative integer, then \textsf{(lpeg.P~n)} is a
+pattern that is the \textsf{lpeg} version of the negative integer
+patterns of \Cref{sec:upt2mdy9}.  Its behaviour under
+\textsf{lpeg.match} is as under.
+\begin{codechunk}
+\nextchunklabel{chk:pb2cbgyw}
+<<lpegexam.fnl>>=
+(let [p1 (lpeg.P -1)
+      p3 (lpeg.P -3)]
+  (assert (= (p1:match "") 1))
+  (assert (= (p3:match "hello") nil))
+  (assert (= (p3:match "hello" 4) 4)))
+@
+\end{codechunk}
+
+\subsubsection{Boolean patterns}
+\label{sec:pzx44una}
+
+If \textsf{b} is one of the Boolean constants \textsf{true} and
+\textsf{false}, then \textsf{(lpeg.P~b)} is a pattern that is the
+\textsf{lpeg} equivalent of the Boolean patterns of
+\Cref{sec:kuf3y73z}.  Its behaviour under \textsf{lpeg.match} is as
+follows.
+\begin{codechunk}
+\nextchunklabel{chk:xl0hd0u9}
+<<lpegexam.fnl>>=
+(let [p (lpeg.P true)
+      q (lpeg.P false)]
+  (assert (= (p:match "") 1))
+  (assert (= (p:match "foo") 1))
+  (assert (= (q:match "") nil))
+  (assert (= (q:match "foo") nil)))
+@
+\end{codechunk}
+
+\subsubsection{Range patterns}
+\label{sec:lodb4xcu}
+
+The pattern \textsf{(lpeg.P a1 a2 ...)} where \textsf{a1},
+\textsf{a2}, \dots, are two-character strings corresponds in
+\textsf{lpeg} to the range patterns defined in \Cref{sec:9vfw1yf3}.
+They behave as follows with respect to \textsf{lpeg.match}.
+\begin{codechunk}
+\nextchunklabel{chk:btc0otpe}
+<<lpegexam.fnl>>=
+(let [p (lpeg.R "09")]
+  (assert (= (p:match "hello") nil))
+  (assert (= (p:match "879") 2))
+  (assert (= (p:match "x86") nil)))
+@
+\end{codechunk}
+
+The pattern \textsf{(lpeg.R "az" "AZ")} matches any Latin letter.
+\begin{codechunk}
+\nextchunklabel{chk:ggol2hsv}
+<<lpegexam.fnl>>=
+(let [p (lpeg.R "az" "AZ")]
+  (assert (= (p:match "hello") 2))
+  (assert (= (p:match "879") nil))
+  (assert (= (p:match "86XF" 3) 4)))
+@
+\end{codechunk}
+
+The pattern \textsf{(lpeg.R "af" "AF" "09")} matches any hexadecimal
+digit.
+\begin{codechunk}
+\nextchunklabel{chk:97ounu5o}
+<<lpegexam.fnl>>=
+(let [p (lpeg.R "af" "AF" "09")]
+  (assert (= (p:match "hello") nil))
+  (assert (= (p:match "879") 2))
+  (assert (= (p:match "Hiya23B0" 4) 5)))
+@
+\end{codechunk}
+
+\subsubsection{Set patterns}
+\label{sec:sghktf56}
+
+The pattern \textsf{(lpeg.S~s)}, where \textsf{s} is any string, is
+the \textsf{lpeg} equivalent of the set patterns that are described in
+\Cref{sec:zxaanwjq}.  It behaves under the action of
+\textsf{lpeg.match} as follows.
+\begin{codechunk}
+\nextchunklabel{chk:gnoa3lqr}
+<<lpegexam.fnl>>=
+(let [p (lpeg.S "aeiou")]
+  (assert (= (p:match "hello") nil))
+  (assert (= (p:match "all") 2))
+  (assert (= (p:match "aaa") 2)))
+@
+\end{codechunk}
 
 \bibsection
 
@@ -727,3 +838,7 @@ follows:
 \end{document}
 
 %%% End of file
+
+% Local Variables:
+% tab-stop-list: (0 2)
+% End:

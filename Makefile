@@ -1,6 +1,5 @@
 .PHONY: all
-all: notes.synctex.orig.gz lpegexam.fnl
-	fennel lpegexam.fnl
+all: lpegexam.fnl notes.synctex.orig.gz
 
 notes.synctex.orig.gz: notes.pdf
 	cp notes.synctex.gz notes.synctex.orig.gz && gunzip -c notes.synctex.orig.gz | sed 's@notes\.ltx@notes.tex@' | gzip > notes.synctex.gz
@@ -14,6 +13,7 @@ notes.ltx: notes.tex
 
 lpegexam.fnl: notes.tex
 	notangle -Rlpegexam.fnl notes.tex > lpegexam.fnl
+	fennel lpegexam.fnl
 
 .PHONY: clean
 clean:
