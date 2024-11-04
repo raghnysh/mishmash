@@ -148,6 +148,8 @@
     \markboth { Contents } {}
   }
 
+\setcounter {tocdepth} {2}
+
 %% ===================================================================
 %% Appendices
 %% ===================================================================
@@ -302,6 +304,14 @@
 \cs_gset:cpn { hrefurl@ } #1#2
  { \hyper@linkurl {#2} {#1} }
 
+\NewDocumentCommand \filename
+  { m }
+  {
+    \guillemetleft
+    \nolinkurl {#1}
+    \guillemetright
+  }
+
 %% ===================================================================
 %% Cross-references
 %% ===================================================================
@@ -419,6 +429,104 @@
   { solution }
 
 %% ===================================================================
+%% Noweb
+%% ===================================================================
+
+\RequirePackage { noweb }
+
+\cs_gset:cpn { nwmargintag } #1
+  {
+    \group_begin:
+    \leavevmode
+    \kern -\codemargin
+    #1.
+    \kern \codemargin
+    \group_end:
+  }
+
+\cs_gset:cpn { nwalsodefined } #1
+  { \scan_stop: }
+
+\cs_gset:cpn { nwused } #1
+  { \scan_stop: }
+
+\cs_gset:cpn { nwnotused } #1
+  { \scan_stop: }
+
+\cs_gset:cpn { nwidentuses } #1
+  { \scan_stop: }
+
+\cs_gset:cpn { nwidentdefs } #1
+  { \scan_stop: }
+
+\noweboptions
+  {
+    breakcode,
+    smallcode
+  }
+
+\NewDocumentCommand \nwverb
+  { v }
+  {
+    \code #1 \edoc
+  }
+
+\NewDocumentCommand \nowebchunkssection
+  { O{List ~ of ~ code ~ chunks} }
+  {
+    \phantomsection
+    \addcontentsline { toc }{ section } {#1}
+    \section* {#1}
+    \markboth {#1} {}
+    \nowebchunks
+  }
+
+\NewDocumentCommand \nowebindexsection
+  { O{List ~ of ~ identifiers} }
+  {
+    \phantomsection
+    \addcontentsline { toc }{ section } {#1}
+    \markboth {#1} {}
+    \section* {#1}
+    \nowebindex
+  }
+
+\RequirePackage [ svgnames ]{ xcolor }
+\RequirePackage { tcolorbox }
+
+\tcbuselibrary
+  {
+    breakable,
+    skins
+  }
+
+\newtcolorbox { codechunk }
+  {
+    after = ,
+    breakable = true,
+    colback = blue!4!white,
+    colframe = tcbcolback,
+    enhanced = true,
+    interior ~ style = fill,
+    sharp ~ corners,
+    size = minimal,
+    top = 4 pt
+  }
+
+\tcolorboxenvironment { verbatim }
+  {
+    after = \par\noindent,
+    breakable = true,
+    colback = black!4!white,
+    colframe = tcbcolback,
+    enhanced = true,
+    fontupper = \small,
+    interior ~ style = fill,
+    sharp ~ corners,
+    size = small
+  }
+
+%% ===================================================================
 %% Macros for the text
 %% ===================================================================
 
@@ -426,6 +534,12 @@
   { m }
   {
     \emph {#1}
+  }
+
+\NewDocumentCommand \str
+  { m }
+  {
+    \text{\itshape" #1 "}
   }
 
 %% End of file

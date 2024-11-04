@@ -4,10 +4,13 @@
 *.blg
 *.fdb_latexmk
 *.fls
+*.fnl
 *.log
+*.ltx
 *.pdf
 *.run.xml
 *.synctex.gz
+*.synctex.orig.gz
 *.toc
 *~
 auto/

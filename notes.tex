@@ -12,7 +12,8 @@
 
 \hypersetup{pdfsubject={This and that}}
 
-\hypersetup{pdfkeywords={books, films, Himalaya, writing}}
+\hypersetup{pdfkeywords={books, films, mathematics, programming,
+    Himalaya, writing}}
 
 \author{Raghavendra Nyshadham\thanks{\cczero} \\
   {\normalsize\nolinkurl{rn@raghnysh.com}}}
@@ -28,14 +29,16 @@
 
   \begin{abstract}
     This document contains my notes on this and that, such as the
-    books that I read, and the films that I watch.  I also hope to
+    books that I read, the films that I watch, and the topics in
+    mathematics and programming that interest me.  I also hope to
     write about the Himalaya: the Garhwal Himalaya, some of which I
     have seen, and near whose foothills I live.  The document is a
     work in progress.  The files of the current version of the
     document are available at
     \url{https://github.com/raghnysh/mishmash}.
 
-    \ghtopics{books, films, Himalaya, writing}
+    \ghtopics{books, films, mathematics, programming, Himalaya,
+      writing}
   \end{abstract}
 \end{titlingpage}
 
@@ -45,9 +48,10 @@
 \label{sec:113nrd0o}
 
 This document contains my notes on this and that, such as the books
-that I read, and the films that I watch.  I also hope to write about
-the Himalaya: the Garhwal Himalaya, some of which I have seen, and
-near whose foothills I live.  The document is a work in progress.  The
+that I read, the films that I watch, and the topics in mathematics and
+programming that interest me.  I also hope to write about the
+Himalaya: the Garhwal Himalaya, some of which I have seen, and near
+whose foothills I live.  The document is a work in progress.  The
 files of the current version of the document are available at
 \url{https://github.com/raghnysh/mishmash}.
 
@@ -357,20 +361,368 @@ prelude:
 \item Witek's class in the medical college is watching the dissection
   of a cadaver.  Olga Matwiszyn (played by Monika Go\'zdzik), one of
   the students, looks uncomfortable.
-
-
-
-
-
-
-
 \end{enumerate}
 
+\section{Using lpeg}
+\label{sec:bdxkrdxt}
 
+\textsf{LPeg} is a parser library for Lua.  The primary references for
+the library are \textcite{bib:6whz1yt4} and \textcite{bib:rr7m3wo6}.
+This section consists of some notes that I have made to learn about
+the library.
 
+\subsection{Strings}
+\label{sec:hj8kx309}
+
+A \firstterm{string} is a finite sequence of \firstterm{characters}.
+We write a string by juxtaposing its characters within double quotes,
+as in \(\str{abcd}\); as usual, we use a backslash to escape a double
+quote character that is a part of a string, as in
+\(\str{abc\textbackslash"d}\).
+
+We will denote the concatenation of two strings \(s\) and \(t\) by
+\(st\).  This means that if \(s = "c_1 \dotsm c_n"\) and
+\(t = "d_1 \dotsm d_p"\), where the \(c_i\) and \(d_j\) are
+characters, then \(st = "c_1 \dotsm c_n d_1 \dotsm d_p"\).
+
+We will use the symbol \(\varepsilon\) for the empty string.  The
+/length/ of a string \(s\) is the number of characters in \(s\); we
+will denote it by \(\ell(s)\).
+
+If \(s\), \(t\), and \(u\) are strings such that \(s = tu\), then we
+say that \(t\) is a \firstterm{prefix} of \(s\), and \(u\) a
+\firstterm{suffix} of \(s\); in that case, \(s\) and \(t\) determine
+\(u\), and we write \(t^{-1}s\) for \(u\); similarly, in that case,
+\(s\) and \(u\) determine \(t\), and we write \(su^{-1}\) for \(t\).
+
+We say that a string \(t\) is a \firstterm{substring} of a string
+\(s\) if \(s = utv\) for some strings \(u\) and \(v\).  In particular,
+the empty string and \(s\) are substrings of any string \(s\).
+
+We will denote by \(\mathcal{S}\) the set of all triples
+\((s, i, \sigma)\), where
+\begin{enumerate}
+\item \(s\) is a string;
+\item \(i\) is an integer such that \(1 \leq i \leq \ell(s) + 1\); and
+\item \(\sigma\) is a finite sequence of substrings of \(s\).
+\end{enumerate}
+We will identify any string \(s\) with the element \((s, 1, ())\) of
+\(\mathcal{S}\), where \(()\) denotes the empty sequence of substrings
+of \(s.\)
+
+Let us fix a symbol \(\bot\) that is not an element of
+\(\mathcal{S}\).  We also fix two symbols \(\mathsf{true}\) and
+\(\mathsf{false}\) that do not belong to \(\mathcal{S}\), and are
+different from each other, and from \(\bot\).
+
+\subsection{Patterns}
+\label{sec:6sb55afv}
+
+A \firstterm{pattern} is a function
+\(p : \mathcal{S} \to \mathcal{S} \cup \{\bot\}\) whose value at any
+element \((s, i, \sigma)\) of \(\mathcal{S}\) is either \(\bot\), or
+an element \((s', i', \sigma')\) of \(\mathcal{S}\) with the following
+properties:
+\begin{enumerate}
+\item \(s' = s\);
+\item \(i \leq i' \leq \ell(s) + 1\); and
+\item \(\sigma\) is a subsequence of \(\sigma'\), that is,
+  \begin{displaymath}
+    \sigma = (t_1, \dotsc, t_m),
+  \end{displaymath}
+  and
+  \begin{displaymath}
+    \sigma' =
+    (u_1, \dotsc, u_n, t_1, \dotsc, t_m, v_1, \dotsc, v_p),
+  \end{displaymath}
+  where \(m, n, p\) are natural numbers, and the \(t_i, u_j, v_k\) are
+  substrings of \(s\).
+\end{enumerate}
+
+We say that a pattern \(p\) \firstterm{matches} an element \(x\) of
+\(\mathcal{S}\) if \(p(x) \neq \bot\).  Thus, if \(p\) is a pattern
+that matches an element \(x\) of \(\mathcal{S}\), then applying \(p\)
+to \(x\) fixes the first coordinate of \(x\), and "enlarges" the
+second and third coordinates of \(x\).
+
+The \firstterm{match} function \(M\) takes a pattern \(p\), and an
+element \(x = (s, i, \sigma)\) of \(\mathcal{S}\), and produces a
+value \(M(p, x)\) as follows:
+\begin{enumerate}
+\item If \(p(x) = \bot\), then \(M(p, x) = \bot\).
+\item If \(p(x) = (s, i', \sigma')\), where \(\sigma'\) is a nonempty
+  sequence of substrings of \(s\), then \(M(p, x) = \sigma'\).
+\item If \(p(x) = (s, i', ())\), then \(M(p, x) = i'\).
+\end{enumerate}
+
+\subsection{Basic patterns}
+\label{sec:2ynr2sf4}
+
+We describe here some basic ways of constructing patterns.  These
+basic patterns can be combined using certain operators.
+
+\subsubsection{String patterns}
+\label{sec:zn6czomy}
+
+If \(a\) is a string, we have a pattern \(p\), whose value at any
+element \((s, i, \sigma)\) of \(\mathcal{S}\) is defined as follows:
+\begin{itemize}
+\item \(p((s, i, \sigma)) = (s, i + \ell(a), \sigma)\) if \(s = tav\),
+  where \(t\) and \(v\) are strings such that \(\ell(t) = i - 1\); and
+\item \(p((s, i, \sigma)) = \bot\) otherwise.
+\end{itemize}
+The pattern \(p\) is denoted by \(P(a)\).
+
+For example, let \(a\) denote the string \(\str{hello}\), and \(p\)
+the pattern \(P(a)\).  If \(s\) is the string \(\str{hello,␣world}\),
+where the symbol ␣ indicates a space character, then
+\begin{displaymath}
+  p(s) =
+  p((s, 1, ())) =
+  (s, 1 + \ell(a), ()) =
+  (s, 6, ())
+\end{displaymath}
+because \(s = tav\), where \(t = \varepsilon\), \(\ell(t) = 0\), and
+\(v = \str{,␣world}\).  Similarly, if \(s\) is the string
+\(\str{oh,␣hello,␣world}\), then
+\begin{displaymath}
+  p((s, 5, (\str{oh}, \str{wo})) = (s, 10, (\str{oh}, \str{wo})),
+\end{displaymath}
+and
+\begin{displaymath}
+  p(s) = p((s, 1, ())) = \bot.
+\end{displaymath}
+
+\subsubsection{Natural number patterns}
+\label{sec:amrbrlnv}
+
+If \(n\) is a natural number, we have a pattern \(p\), whose value at
+any element \((s, i, \sigma)\) of \(\mathcal{S}\) is defined as
+follows:
+\begin{enumerate}
+\item \(p((s, i, \sigma)) = (s, i + n, \sigma)\) if \(s = tuv\), where
+  \(t\), \(u\), and \(v\) are strings such that \(\ell(t) = i - 1\)
+  and \(\ell(u) = n\); and
+\item \(p((s, i, \sigma)) = \bot\) otherwise.
+\end{enumerate}
+The pattern \(p\) is denoted by \(P(n)\).
+
+For example, if \(p\) denotes the pattern \(P(3)\), and \(s\) the
+string \(\str{\text{hello␣world}}\), then
+\begin{align*}
+  &p(s) = p(s, 1, ()) = (s, 4, ()), \\
+  &p((s, 9, (\str{hell}, \str{wo}))) =
+    (s, 12, (\str{hell}, \str{wo})), \\
+  &p((s, 10, ())) = \bot.
+\end{align*}
+
+\subsubsection{Negative integer patterns}
+\label{sec:upt2mdy9}
+
+If \(n\) is a negative integer, we have a pattern \(p\), whose value
+at any element \(x\) of \(\mathcal{S}\) is defined as follows:
+\begin{enumerate}
+\item \(p(x) = x\) if \(q(x) = \bot\), where \(q = P(-n)\); and
+\item \(p(x) = \bot\) otherwise.
+\end{enumerate}
+The pattern \(p\) is denoted by \(P(n)\).
+
+For example, if \(p\) denotes the pattern \(P(-3)\), and \(s\) the
+string \(\str{\text{hello␣world}}\), then
+\begin{align*}
+  &p(s) = p(s, 1, ()) = \bot, \\
+  &p((s, 9, (\str{hell}, \str{wo}))) = \bot, \\
+  &p((s, 10, ())) = (s, 10, ()).
+\end{align*}
+
+\subsubsection{Boolean patterns}
+\label{sec:kuf3y73z}
+
+The symbols \(\mathsf{true}\) and \(\mathsf{false}\) lead to patterns
+\(p\) and \(q\) that are defined by setting \(p(x) = x\) and
+\(q(x) = \bot\) for all \(x \in \mathcal{S}\).  The pattern \(p\) is
+denoted by \(P(\mathsf{true})\), and the pattern \(q\) by
+\(P(\mathsf{false})\).
+
+For example, if \(p\) denotes the pattern \(P(\mathsf{true})\), \(q\)
+the pattern \(P(\mathsf{false})\), and \(s\) the string
+\(\str{\text{hello␣world}}\), then
+\begin{align*}
+  &p(s) = s, \\
+  &p((s, 9, (\str{hell}, \str{wo}))) =
+    (s, 9, (\str{hell}, \str{wo})) \\
+  &p((s, 10, ())) = (s, 10, ()),
+\end{align*}
+and
+\begin{align*}
+  &q(s) = \bot, \\
+  &q((s, 9, (\str{hell}, \str{wo}))) = \bot, \\
+  &q((s, 10, ())) = \bot.
+\end{align*}
+
+\subsubsection{Range patterns}
+\label{sec:9vfw1yf3}
+
+For any sequence \(\alpha\) of two-character strings, we have a
+pattern \(p\), whose value at any element \((s, i, \sigma)\) of
+\(\mathscr{S}\) is defined as follows:
+\begin{enumerate}
+\item \(p((s, i, \sigma)) = (s, i + 1, \sigma)\) if there are strings
+  \(t, u, v\), and a member \(a = "c_1c_2"\) of the sequence
+  \(\alpha\), such that \(s = tuv\), \(\ell(t) = i - 1\), and \(u\) is
+  a one-character string whose sole character \(c\) satisfies the
+  condition \(c_1 \leq c \leq c_2\) with respect to the standard order
+  on the set of characters; and
+\item \(p((s, i, \sigma)) = \bot\) otherwise.
+\end{enumerate}
+The pattern \(p\) is denoted by \(R(\alpha)\).
+
+For example, if \(\alpha\) is the one-member sequence \(("09"\), and
+\(p\) the pattern \(R(\alpha\), then
+\begin{align*}
+  &p(\str{hello}) = p((\str{hello}, 1, ())) = \bot, \\
+  &p((\str{hello,␣23B0}, 8, ())) = (\str{hello,␣23B0}, 9, ()), \\
+  &p(\str{x86}) = p((\str{x86}, 1, ())) = \bot.
+\end{align*}
+
+\subsubsection{Set patterns}
+\label{sec:zxaanwjq}
+
+For any string \(a\), we have a pattern \(p\), whose value at any
+element \((s, i, \sigma)\) of \(\mathscr{S}\) is defined as follows:
+\begin{enumerate}
+\item \(p((s, i, \sigma)) = (s, i + 1, \sigma)\) if \(s = tuv\), where
+  \(t\), \(u\), and \(v\) are strings such that \(s = tuv\),
+  \(\ell(t) = i - 1\), and \(u\) is a one-character string that is a
+  substring of \(a\); and
+\item \(p((s, i, \sigma)) = \bot\) otherwise.
+\end{enumerate}
+The pattern \(p\) is denoted by \(S(a)\).
+
+For example, if \(a\) is the string \(\str{aeiou}\), and \(p\) the
+pattern \(S(a)\), then
+\begin{align*}
+  &p(\str{hello}) = p((\str{hello}, 1, ())) = \bot, \\
+  &p((\str{hello}, 2, ())) = (\str{hello}, 3, ()), \\
+  &p(\str{aaa}) = p((\str{aaa}, 1, ())) = (\str{aaa}, 2, ()).
+\end{align*}
+
+\subsection{lpeg}
+\label{sec:2pj8tomh}
+
+I am using the Fennel programming language \parencite{bib:3jfp5s36} to
+experiment with the \textsf{lpeg} library.  The code of the
+experiments is in the file \filename{lpegexam.fnl}.  We first import
+the library with the local name \textsf{lpeg}.
+\begin{codechunk}
+\nextchunklabel{chk:m5mv0tto}
+<<lpegexam.fnl>>=
+(local lpeg (require :lpeg))
+@ %def lpeg
+\end{codechunk}
+
+In the \textsf{lpeg} library, the match function \(M\) is implemented
+by the function \textsf{lpeg.match}:
+\begin{flushleft}
+  \textsf{lpeg.match pattern string [start]} \hfill
+  [\textit{Function}]
+\end{flushleft}
+The first two arguments of the function are a pattern, and a string.
+The third optional argument \textsf{start} is an integer such that
+\begin{center}
+  1 \(\leq\) \textsf{start} \(\leq\) \(\ell\)(\textsf{string}) + 1.
+\end{center}
+The default value of the third argument is \(1\).  The function
+returns a value that represents the mathematical value
+\begin{center}
+  \textsf{M(pattern, ((string, start, ())))},
+\end{center}
+where \textsf{M} is the function described in \Cref{sec:6sb55afv}.
+Thus:
+\begin{enumerate}
+\item If \textsf{pattern((string, start, ())) = \(\bot\)}, then
+  \textsf{lpeg.match} returns the constant \textsf{nil}.
+\item If \textsf{pattern((string, start, ())) = (string, index,
+    \(\tau\))}, where the sequence \(\tau\) is a nonempty sequence of
+  substrings of \textsf{string}, then \textsf{lpeg.match} returns the
+  elements of \(\tau\) as multiple values.
+\item If \textsf{pattern((string, start, ())) = (string, index, ())},
+  then \textsf{lpeg.match} returns the integer \textsf{index}.
+\end{enumerate}
+
+The function \textsf{lpeg.match} is a method of the pattern object
+that is its first argument.  This means that the function call
+\begin{center}
+  \textsf{(lpeg.match pattern string start)}
+\end{center}
+can also be written as
+\begin{center}
+  \textsf{(pattern:match string start)}.
+\end{center}
+
+\subsection{Basic patterns in lpeg}
+\label{sec:7l3dfnco}
+
+The \textsf{lpeg} equivalents of the basic patterns defined in
+\Cref{sec:2ynr2sf4} are the topic of this subsection.  The library
+does not give direct access to pattern objects, so I will describe
+them by saying what the function \textsf{lpeg.match} does to the
+patterns.
+
+\subsubsection{String patterns}
+\label{sec:lk201sc6}
+
+For any string \textsf{string}, the function \textsf{lpeg.P} gives a
+pattern \textsf{(lpeg.P~string)}.  This is the \textsf{lpeg}
+equivalent of the string patterns of \Cref{sec:zn6czomy}.  It behaves
+as follows under the action of \textsf{lpeg.match}.
+
+\begin{codechunk}
+\nextchunklabel{chk:furq3t6m}
+<<lpegexam.fnl>>=
+(let [p (lpeg.P "hello")]
+  (assert (= (lpeg.match p "hello, world") 6))
+  (assert (= (lpeg.match p "oh, hello world") nil))
+  (assert (= (lpeg.match p "oh, hello world" 5) 10))
+  (assert (= (lpeg.match p "hi world") nil)))
+@
+\end{codechunk}
+
+When an \textsf{lpeg} function gets a string as an argument where it
+expects a pattern, it applies the function \textsf{lpeg.P} to make a
+pattern out of that string.  Therefore, we could have equivalently
+written the above code as follows:
+\begin{codechunk}
+\nextchunklabel{chk:wm46f2zt}
+<<lpegexam.fnl>>=
+(let [p "hello"]
+  (assert (= (lpeg.match p "hello, world") 6))
+  (assert (= (lpeg.match p "oh, hello world") nil))
+  (assert (= (lpeg.match p "oh, hello world" 5) 10))
+  (assert (= (lpeg.match p "hi world") nil)))
+@
+\end{codechunk}
+
+Using the method notation for \textsf{lpeg.match} that was mentioned
+in \Cref{sec:2pj8tomh}, we can rewrite the above assertions as
+follows:
+\begin{codechunk}
+\nextchunklabel{chk:rp4zttk5}
+<<lpegexam.fnl>>=
+(let [p (lpeg.P "hello")]
+  (assert (= (p:match "hello, world") 6))
+  (assert (= (p:match "oh, hello world") nil))
+  (assert (= (p:match "oh, hello world" 5) 10))
+  (assert (= (p:match "hi world") nil)))
+@
+\end{codechunk}
 
 
 \bibsection
+
+\nowebchunkssection
+
+\nowebindexsection
 
 \end{document}
 
