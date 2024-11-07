@@ -1,3 +1,4 @@
+*-SAVE-ERROR
 *.aux
 *.bbl
 *.bcf
@@ -7,6 +8,7 @@
 *.fnl
 *.log
 *.ltx
+*.lua
 *.pdf
 *.run.xml
 *.synctex.gz

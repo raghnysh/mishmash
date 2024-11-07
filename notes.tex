@@ -366,7 +366,7 @@ prelude:
 \section{Using lpeg}
 \label{sec:bdxkrdxt}
 
-\textsf{LPeg} is a parser library for Lua.  The primary references for
+\verb|LPeg| is a parser library for Lua.  The primary references for
 the library are \textcite{bib:6whz1yt4} and \textcite{bib:rr7m3wo6}.
 This section consists of some notes that I have made to learn about
 the library.
@@ -374,51 +374,204 @@ the library.
 \subsection{Strings}
 \label{sec:hj8kx309}
 
-A \firstterm{string} is a finite sequence of \firstterm{characters}.
-We write a string by juxtaposing its characters within double quotes,
-as in \(\str{abcd}\); as usual, we use a backslash to escape a double
-quote character that is a part of a string, as in
-\(\str{abc\textbackslash"d}\).
+A \firstterm{string} is an object of type \textsf{string}.  It is thus
+a sequence of characters.  A \firstterm{character} is represented by a
+byte, that is, an integer between 0 and 255 inclusive
+\parencite[Section~2.1]{bib:x8gln9yb}.  The core library \verb|string|
+provides basic facilities for working with strings.
 
-We will denote the concatenation of two strings \(s\) and \(t\) by
-\(st\).  This means that if \(s = "c_1 \dotsm c_n"\) and
-\(t = "d_1 \dotsm d_p"\), where the \(c_i\) and \(d_j\) are
-characters, then \(st = "c_1 \dotsm c_n d_1 \dotsm d_p"\).
+A literal string (as opposed to a variable denoting a string) is
+written within double quotes, with special characters escaped by a
+backslash, as in \verb|"abc\"de"|.  The \firstterm{empty string} is
+the literal string \verb|""|.  The concatenation of two strings is
+given by the \verb|..| operator:
+\begin{codechunk}
+\nextchunklabel{chk:gzldnwzu}
+<<lpegexam.lua>>=
+assert("abc" .. "def" == "abcdef")
+@
+\end{codechunk}
 
-We will use the symbol \(\varepsilon\) for the empty string.  The
-/length/ of a string \(s\) is the number of characters in \(s\); we
-will denote it by \(\ell(s)\).
+The \firstterm{length} of the string, that is, the number of
+characters in it, is given by the function \verb|string.len|:
+\begin{codechunk}
+\nextchunklabel{chk:bwsrb69b}
+<<lpegexam.lua>>=
+assert(string.len("abcde") == 5)
+@
+\end{codechunk}
 
-If \(s\), \(t\), and \(u\) are strings such that \(s = tu\), then we
-say that \(t\) is a \firstterm{prefix} of \(s\), and \(u\) a
-\firstterm{suffix} of \(s\); in that case, \(s\) and \(t\) determine
-\(u\), and we write \(t^{-1}s\) for \(u\); similarly, in that case,
-\(s\) and \(u\) determine \(t\), and we write \(su^{-1}\) for \(t\).
+The \verb|#| operator gives the length of any sequence, so it can be
+used in the place of \verb|string.len|.  We can also call any function
+in the core library \verb|string| as a method on strings, so we can
+write \verb|s:len()| instead of \verb|string.len(s)|.  It is optional
+to use parentheses around the argument when calling a function of one
+argument that is a string or a table constructor.  Thus, the above
+assertion could have been written in the following ways also:
+\begin{codechunk}
+\nextchunklabel{chk:ytfb0svk}
+<<lpegexam.lua>>=
+assert(# "abcde" == 5)
+assert(("abcde"):len() == 5)
+do
+  local s = "abcde"
+  assert(s:len() == 5)
+end
+assert(string.len "abcde" == 5)
+assert(#("abcde") == 5)
+@
+\end{codechunk}
 
-We say that a string \(t\) is a \firstterm{substring} of a string
-\(s\) if \(s = utv\) for some strings \(u\) and \(v\).  In particular,
-the empty string and \(s\) are substrings of any string \(s\).
+If \verb|s|. \verb|t|, and \verb|u| are strings such that \verb|s|
+equals the concatenation \verb|t .. u|, we say that \verb|t| is a
+\firstterm{prefix} of \texttt{s}, and \verb|u| a \firstterm{suffix} of
+\verb|s|; in that case, \verb|s| and \verb|t| determine \verb|u|, and
+\verb|s| and \verb|u| determine \verb|t|.
 
-We will denote by \(\mathcal{S}\) the set of all triples
-\((s, i, \sigma)\), where
+We say that a string \verb|t| is a \firstterm{substring} of a string
+\verb|s| is \verb|s| equals \verb|u .. t .. v| for some strings
+\verb|u| and \verb|v|.  In particular, the empty string \verb|""| and
+\verb|s| are substrings of any string \verb|s|.
+
+For every string \verb|s| of length \verb|n|, and for every integer
+\verb|i| between \verb|1| and \verb|n| inclusive, we will denote the
+character at position \verb|i| in \verb|s| by \verb||\verb|s[i]|; the
+notation \verb|s[i]| is not a valid Lua expression; it is just a
+convenient notation.
+
+Subsequences of a string can be obtained using the function
+\verb|string.sub|.  It takes a string \verb|s|, and two integers
+\verb|i| and \verb|j| as arguments, and returns the substring of
+\verb|s| that is determined by the following procedure, in which
+\verb|n| denotes the length of \verb|s|:
 \begin{enumerate}
-\item \(s\) is a string;
-\item \(i\) is an integer such that \(1 \leq i \leq \ell(s) + 1\); and
-\item \(\sigma\) is a finite sequence of substrings of \(s\).
+\item The third argument \verb|j| is optional, and is given the value
+  \verb|-1| if it is not supplied.
+\item If \verb|i| \(<\) \verb|0|, it is substituted by
+  \verb|n + i + 1|, and if \verb|j| \(<\) \verb|0|, it is substituted
+  by \verb|n + j + 1|.
+\item If \verb|i| \(<\) \verb|1|, it is substituted by \verb|1|, and
+  if \verb|j| \(>\) \verb|n|, it is substituted by \verb|n|.
+\item If \verb|i| \(>\) \verb|j|, the function returns the empty
+  string \verb|""|.
+\item If \verb|i| \(\leq\) \verb|j|, the function returns the
+  substring of \verb|s| whose characters are \verb|s[i]|, \dots,
+  \verb|s[j]| in that order.
 \end{enumerate}
-We will identify any string \(s\) with the element \((s, 1, ())\) of
-\(\mathcal{S}\), where \(()\) denotes the empty sequence of substrings
-of \(s.\)
 
-Let us fix a symbol \(\bot\) that is not an element of
-\(\mathcal{S}\).  We also fix two symbols \(\mathsf{true}\) and
-\(\mathsf{false}\) that do not belong to \(\mathcal{S}\), and are
-different from each other, and from \(\bot\).
+Here are some examples of using the function \verb|string.sub|.
+\begin{codechunk}
+\nextchunklabel{chk:wwsq6o3x}
+<<lpegexam.lua>>=
+do
+  local s = "abcdef"
+  assert(string.sub(s, -4, 3) == "c")
+  assert(string.sub(s, 3, -2) == "cde")
+  assert(string.sub(s, 3, 7) == "cdef")
+  assert(string.sub(s, -7, -4) == "abc")
+  assert(string.sub(s, 3, 2) == "")
+  assert(string.sub(s, 3, 5) == "cde")
+  assert(string.sub(s, 3) == "cdef")
+end
+@
+\end{codechunk}
+
+The function \texttt{string.byte} takes a string \texttt{s} and two
+integers \verb|i| and \verb|j| as arguments, and returns multiple byte
+values that are determined by the following procedure, in which
+\verb|n| denotes the length of \verb|s|:
+\begin{enumerate}
+\item The second argument \verb|i| is optional, and is given the value
+  \verb|1| if it is not supplied.
+\item The third argument \verb|j| is optional, and is given the value
+  \verb|i| if it is not supplied.
+\item If \verb|i| \(<\) \verb|0|, it is substituted by
+  \verb|n + i + 1|, and if \verb|j| \(<\) \verb|0|, it is substituted
+  by \verb|n + j + 1|.
+\item If \verb|i| \(<\) \verb|1|, it is substituted by \verb|1|, and
+  if \verb|j| \(>\) \verb|n|, it is substituted by \verb|n|.
+\item If \verb|i| \(>\) \verb|j|, the function returns no values.
+\item If \verb|i| \(\leq\) \verb|j|, the function returns the bytes
+  representing the characters \verb|s[i]|, \dots, \verb|s[j]| in that
+  order.
+\end{enumerate}
+
+Here are some examples of using \verb|string.byte|.
+\begin{codechunk}
+\nextchunklabel{chk:38qzckgo}
+<<lpegexam.lua>>=
+do
+  local s = "abcdef"
+  local a1, e1 = {s:byte(1, 3)}, {97, 98, 99}
+  local a2, e2 = {s:byte(2, 1)}, {}
+  for k, v in pairs(a1) do
+    assert(v == e1[k])
+  end
+  for k, v in pairs(a2) do
+    assert(v == e2[k])
+  end
+end
+@
+\end{codechunk}
+The last loop of assertions above says that the table \verb|a2| is
+empty, that is, that the call \verb|s:byte(2,1)| returns no values.
 
 \subsection{Patterns}
 \label{sec:6sb55afv}
 
-A \firstterm{pattern} is a function
+A \firstterm{pattern} is an object that specifies certain structural
+properties of a general string.  We say that a pattern \verb|p|
+\firstterm{matches} a string \verb|s| if \verb|s| has the properties
+that are specified by \verb|p|.  The act of checking whether a pattern
+\verb|p| matches a string \verb|s| is called \firstterm{matching}
+\verb|s| against \verb|p|; in this context, \verb|s| is called the
+\firstterm{subject}.
+
+A pattern may associate certain values with every string that it
+matches; such a pattern is called a \firstterm{capture pattern}.  The
+values that a capture pattern \verb|p| associates with a string
+\verb|s| that it matches are called the \firstterm{values captured}
+from \verb|s| by \verb|p|, or the \firstterm{capture values} of
+\verb|p| at \verb|s|.  I will call the patterns that are not capture
+patterns \firstterm{liberal patterns}.
+
+The \verb|lpeg| library provides a type \verb|pattern|, whose objects
+represent patterns.  It also provides a function \verb|match| for
+matching strings against patterns.
+
+We import the \verb|lpeg| library with the name \verb|lpeg|.  This
+means that any object exported by the library can be referenced by
+prefixing \verb|lpeg| to its name.  In particular, \verb|lpeg.match|
+refers to the function \verb|match| from the \verb|lpeg| library.
+\begin{codechunk}
+\nextchunklabel{chk:la3e982u}
+<<lpegexam.lua>>=
+local lpeg = require("lpeg")
+@
+\end{codechunk}
+
+The function \verb|lpeg.match| takes a pattern \verb|p|, a string
+\verb|s|, and an integer \verb|i|, and returns zero or more values
+that are determined by the following procedure:
+\begin{enumerate}
+\item The third argument \verb|i| is optional, and is given the value
+  \verb|1| if it is not supplied.
+\item Let \verb|t| be the substring of \verb|s| that is the value
+  returned by the function call \verb|string.sub(s, i)|, or,
+  equivalently, by the function call \verb|string.sub(s, i, -1)|.
+\item If the pattern \verb|p| does not match any prefix of the string
+  \verb|t|, the function \verb|lpeg.match| returns the value
+  \verb|nil|.
+\item If \verb|p| matches a prefix of \verb|t|, and if \verb|p| is a
+  liberal pattern, the function returns the integer \verb|i + k|,
+  where \verb|k| is the length of the longest prefix of \verb|t| that
+  \verb|p| matches.
+\item If \verb|p| matches a prefix of \verb|t|, and if \verb|p| is a
+  capture pattern, the function returns the values captured from
+  \verb|t| by \verb|p|.
+\end{enumerate}
+
+A \emph{pattern} is a function
 \(p : \mathcal{S} \to \mathcal{S} \cup \{\bot\}\) whose value at any
 element \((s, i, \sigma)\) of \(\mathcal{S}\) is either \(\bot\), or
 an element \((s', i', \sigma')\) of \(\mathcal{S}\) with the following
@@ -439,13 +592,13 @@ properties:
   substrings of \(s\).
 \end{enumerate}
 
-We say that a pattern \(p\) \firstterm{matches} an element \(x\) of
+We say that a pattern \(p\) \emph{matches} an element \(x\) of
 \(\mathcal{S}\) if \(p(x) \neq \bot\).  Thus, if \(p\) is a pattern
 that matches an element \(x\) of \(\mathcal{S}\), then applying \(p\)
 to \(x\) fixes the first coordinate of \(x\), and "enlarges" the
 second and third coordinates of \(x\).
 
-The \firstterm{match} function \(M\) takes a pattern \(p\), and an
+The \emph{match} function \(M\) takes a pattern \(p\), and an
 element \(x = (s, i, \sigma)\) of \(\mathcal{S}\), and produces a
 value \(M(p, x)\) as follows:
 \begin{enumerate}
