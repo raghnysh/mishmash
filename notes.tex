@@ -527,13 +527,10 @@ that are specified by \verb|p|.  The act of checking whether a pattern
 \verb|s| against \verb|p|; in this context, \verb|s| is called the
 \firstterm{subject}.
 
-A pattern may associate certain values with every string that it
-matches; such a pattern is called a \firstterm{capture pattern}.  The
-values that a capture pattern \verb|p| associates with a string
-\verb|s| that it matches are called the \firstterm{values captured}
-from \verb|s| by \verb|p|, or the \firstterm{capture values} of
-\verb|p| at \verb|s|.  I will call the patterns that are not capture
-patterns \firstterm{liberal patterns}.
+A pattern \verb|p| may associate certain values with certain strings
+\verb|s| that it matches; these values are called the
+\firstterm{values captured} from \verb|s| by \verb|p|, or the
+\firstterm{capture values} of \verb|p| at \verb|s|.
 
 The \verb|lpeg| library provides a type \verb|pattern|, whose objects
 represent patterns.  It also provides a function \verb|match| for
@@ -551,25 +548,238 @@ local lpeg = require("lpeg")
 \end{codechunk}
 
 The function \verb|lpeg.match| takes a pattern \verb|p|, a string
-\verb|s|, and an integer \verb|i|, and returns zero or more values
-that are determined by the following procedure:
+\verb|s|, and an integer \verb|i|, and returns one or more values that
+are determined by the following procedure, in which \verb|n| denotes
+the length of \verb|s|:
 \begin{enumerate}
 \item The third argument \verb|i| is optional, and is given the value
   \verb|1| if it is not supplied.
+\item If \verb|i| \(<\) \verb|1|, it is substituted by
+  \verb|n + i + 1|.
+\item If \verb|i| \(<\) 1, it is substituted by \verb|1|.
+\item If \verb|i| \(>\) \verb|n|, it is substituted by \verb|n + 1|.
 \item Let \verb|t| be the substring of \verb|s| that is the value
   returned by the function call \verb|string.sub(s, i)|, or,
   equivalently, by the function call \verb|string.sub(s, i, -1)|.
 \item If the pattern \verb|p| does not match any prefix of the string
   \verb|t|, the function \verb|lpeg.match| returns the value
   \verb|nil|.
-\item If \verb|p| matches a prefix of \verb|t|, and if \verb|p| is a
-  liberal pattern, the function returns the integer \verb|i + k|,
-  where \verb|k| is the length of the longest prefix of \verb|t| that
-  \verb|p| matches.
-\item If \verb|p| matches a prefix of \verb|t|, and if \verb|p| is a
-  capture pattern, the function returns the values captured from
-  \verb|t| by \verb|p|.
+\item If \verb|p| matches a prefix of \verb|t|, let \verb|u| be the
+  longest prefix of \verb|t| that \verb|p| matches.
+  \begin{itemize}
+  \item If \verb|p| has captured one or more values from \verb|u|,
+    then the function returns those values.
+  \item If \verb|p| has not captured any values from \verb|u|, then
+    the function returns the integer \verb|i + k|, where  \verb|k|
+    denotes the length of \verb|u|.
+  \end{itemize}
 \end{enumerate}
+
+\subsection{Pattern constructors}
+\label{sec:h34gukwe}
+
+Patterns are defined inductively using constructors.  A
+\firstterm{pattern constructor} is a function that takes certain
+objects, and returns a pattern.  For example, in \cref{item:b8e13ne0}
+below, \verb|lpeg.P| is a constructor that takes an integer, and
+returns a pattern; in \cref{item:p83rkp40}, \verb|+| is a constructor
+that takes two patterns, and returns a pattern.  The following are the
+various pattern constructors, and their inputs.  For each
+construction, we define for every pattern \verb|p| produced by that
+construction, a finite set \verb|Sub(p)| of patterns, and a total
+order \(\leq_\mathtt{p}\) on \verb|Set(p)|; the elements of
+\verb|Sub(p)| are called the \firstterm{subpatterns} of \verb|p|.
+
+\begin{enumerate}
+\item If \verb|p| is a pattern, then \verb|lpeg.P(p)| is a pattern; if
+  \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|s| is a string, then \verb|lpeg.P(s)| is a pattern; if
+  \verb|p| denotes this pattern, then \verb|Sub(p)| is the singleton
+  \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the
+  trivial one.
+\item \label{item:b8e13ne0} If \verb|n| is an integer, then
+  \verb|lpeg.P(n)| is a pattern; if \verb|p| denotes this pattern,
+  then \verb|Sub(p)| is the singleton \verb|{p}|; the order
+  \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the trivial one.
+\item If \verb|b| is one of the Boolean values \verb|true| and
+  \verb|false|, then \verb|lpeg.P(b)| is a pattern; if \verb|p|
+  denotes this pattern, then \verb|Sub(p)| is the singleton
+  \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the
+  trivial one.
+\item If \verb|t| is a table, then \verb|lpeg.P(t)| is a pattern; if
+  \verb|p| denotes this pattern, then \verb|Sub(p)| is the singleton
+  \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the
+  trivial one.
+\item If \verb|f| is a function, then \verb|lpeg.P(f)| is a pattern;
+  if \verb|p| denotes this pattern, then \verb|Sub(p)| is the
+  singleton \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|
+  is the trivial one.
+\item If \verb|p| is a pattern, then \verb|lpeg.B(p)| is a pattern; if
+  \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|r1|, \verb|r2|, \dots, is a finite sequence of
+  two-character strings, then the object \verb|lpeg.R(r1, r2, ...)| is
+  a pattern; if \verb|p| denotes this pattern, then \verb|Sub(p)| is
+  the singleton \verb|{p}|; the order \(\leq_\mathtt{p}\) on
+  \verb|Sub(p)| is the trivial one.
+\item If \verb|s| is a string, then \verb|lpeg.S(s)| is a pattern; if
+  \verb|p| denotes this pattern, then \verb|Sub(p)| is the singleton
+  \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the
+  trivial one.
+\item If \verb|v| is a variable-name, then \verb|lpeg.V(v)| is a
+  pattern; if \verb|p| denotes this pattern, then \verb|Sub(p)| is the
+  singleton \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|
+  is the trivial one.
+\item If \verb|p| is a pattern, then \verb|#p| is a pattern; if
+  \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|p| is a pattern, then \verb|-p| is a pattern; if
+  \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{q}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item \label{item:p83rkp40} If \verb|p| and \verb|q| are patterns,
+  then \verb|p + q| is a pattern; if \verb|r| denotes this pattern,
+  then \verb|Sub(r)| is the union of the sets \verb|{r}|,
+  \verb|Set(p)|, and \verb|Set(q)|; the order \(\leq_\mathtt{r}\) on
+  \verb|Set(r)| is the unique one that induces the orders
+  \(\leq_\mathtt{p}\) and \(\leq_\mathtt{q}\) on \verb|Set(p)| and
+  \verb|Set(q)|, respectively, and satisfies the condition \verb|r|
+  \(<_\mathtt{r}\) \verb|p'| \(<_\mathtt{r}\) \verb|q'| for all
+  elements \verb|p'| of \verb|Set(p)|, and \verb|q'| of \verb|Set(q)|.
+\item If \verb|p| and \verb|q| are patterns, then \verb|p - q| is a
+  pattern; if \verb|r| denotes this pattern, then \verb|Sub(r)| is the
+  union of the sets \verb|{r}|, \verb|Set(p)|, and \verb|Set(q)|; the
+  order \(\leq_\mathtt{r}\) on \verb|Set(r)| is the unique one that
+  induces the orders \(\leq_\mathtt{p}\) and \(\leq_\mathtt{q}\) on
+  \verb|Set(p)| and \verb|Set(q)|, respectively, and satisfies the
+  condition \verb|r| \(<_\mathtt{r}\) \verb|p'| \(<_\mathtt{r}\)
+  \verb|q'| for all elements \verb|p'| of \verb|Set(p)|, and \verb|q'|
+  of \verb|Set(q)|.
+\item If \verb|p| and \verb|q| are patterns, then \verb|p * q| is a
+  pattern; if \verb|r| denotes this pattern, then \verb|Sub(r)| is the
+  union of the sets \verb|{r}|, \verb|Set(p)|, and \verb|Set(q)|; the
+  order \(\leq_\mathtt{r}\) on \verb|Set(r)| is the unique one that
+  induces the orders \(\leq_\mathtt{p}\) and \(\leq_\mathtt{q}\) on
+  \verb|Set(p)| and \verb|Set(q)|, respectively, and satisfies the
+  condition \verb|r| \(<_\mathtt{r}\) \verb|p'| \(<_\mathtt{r}\)
+  \verb|q'| for all elements \verb|p'| of \verb|Set(p)|, and \verb|q'|
+  of \verb|Set(q)|.
+\item If \verb|p| is a pattern, and \verb|n| an integer, then
+  \verb|p^n| is a pattern; if \verb|q| denotes this pattern, then
+  \verb|Sub(q)| is the union of the singleton \verb|{q}| with
+  \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the
+  unique one that induces the order \(\leq_\mathtt{p}\) on
+  \verb|Sub(p)|, and satisfies the condition that \verb|q|
+  \(<_\mathtt{q}\) \verb|r| for every element \verb|r| of
+  \verb|Sub(p)|.
+\item If \verb|p| is a pattern, then \verb|lpeg.C(p)| is a pattern; if
+  \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{q}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|n| is an integer, then \verb|lpeg.Carg(n)| is a
+  pattern; if \verb|p| denotes this pattern, then \verb|Sub(p)| is the
+  singleton \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|
+  is the trivial one.
+\item If \verb|k| is a Lua value, then \verb|lpeg.Cb(k)| is a pattern;
+  if \verb|p| denotes this pattern, then \verb|Sub(p)| is the
+  singleton \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)|
+  is the trivial one.
+\item If \verb|v1|, \verb|v2|, \dots, is a finite sequence of Lua
+  values, then the object \verb|lpeg.Cc(v1, v2, ...)| is a pattern; if
+  \verb|p| denotes this pattern, then \verb|Sub(p)| is the singleton
+  \verb|{p}|; the order \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the
+  trivial one.
+\item If \verb|p| is a pattern, then \verb|lpeg.Cg(p)| is a pattern;
+  if \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{q}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|p| is a pattern, and \verb|k| a Lua value, then
+  \verb|lpeg.Cg(p, k)| is a pattern; if \verb|q| denotes this pattern,
+  then \verb|Sub(q)| is the union of the singleton \verb|{q}| with
+  \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the
+  unique one that induces the order \(\leq_\mathtt{q}\) on
+  \verb|Sub(p)|, and satisfies the condition \verb|q| \(<_\mathtt{q}\)
+  \verb|r| for every element \verb|r| of \verb|Sub(p)|.
+\item The object \verb|lpeg.Cp()| is a pattern; if \verb|p| denotes
+  this pattern, then \verb|Sub(p)| is the singleton \verb|{p}|; the
+  order \(\leq_\mathtt{p}\) on \verb|Sub(p)| is the trivial one.
+\item If \verb|p| is a pattern, then \verb|lpeg.Cs(p)| is a pattern;
+  if \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{q}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|p| is a pattern, then \verb|lpeg.Ct(p)| is a pattern;
+  if \verb|q| denotes this pattern, then \verb|Sub(q)| is the union of
+  the singleton \verb|{q}| with \verb|Sub(p)|; the order
+  \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the unique one that induces
+  the order \(\leq_\mathtt{q}\) on \verb|Sub(p)|, and satisfies the
+  condition \verb|q| \(<_\mathtt{q}\) \verb|r| for every element
+  \verb|r| of \verb|Sub(p)|.
+\item If \verb|p| is a pattern, and \verb|s| a string, then
+  \verb|p / s| is a pattern; if \verb|q| denotes this pattern, then
+  \verb|Sub(q)| is the union of the singleton \verb|{q}| with
+  \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the
+  unique one that induces the order \(\leq_\mathtt{q}\) on
+  \verb|Sub(p)|, and satisfies the condition that \verb|q|
+  \(<_\mathtt{q}\) \verb|r| for every element \verb|r| of
+  \verb|Sub(p)|.
+\item If \verb|p| is a pattern, and \verb|n| an integer, then
+  \verb|p / n| is a pattern; if \verb|q| denotes this pattern, then
+  \verb|Sub(q)| is the union of the singleton \verb|{q}| with
+  \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the
+  unique one that induces the order \(\leq_\mathtt{q}\) on
+  \verb|Sub(p)|, and satisfies the condition that \verb|q|
+  \(<_\mathtt{q}\) \verb|r| for every element \verb|r| of
+  \verb|Sub(p)|.
+\item If \verb|p| is a pattern, and \verb|f| a function, then
+  \verb|p / f| is a pattern; if \verb|q| denotes this pattern, then
+  \verb|Sub(q)| is the union of the singleton \verb|{q}| with
+  \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the
+  unique one that induces the order \(\leq_\mathtt{q}\) on
+  \verb|Sub(p)|, and satisfies the condition that \verb|q|
+  \(<_\mathtt{q}\) \verb|r| for every element \verb|r| of
+  \verb|Sub(p)|.
+\item If \verb|p| is a pattern, and \verb|f| a function, then
+  \verb|p % f| is a pattern; if \verb|q| denotes this pattern, then
+  \verb|Sub(q)| is the union of the singleton \verb|{q}| with
+  \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)| is the
+  unique one that induces the order \(\leq_\mathtt{q}\) on
+  \verb|Sub(p)|, and satisfies the condition that \verb|q|
+  \(<_\mathtt{q}\) \verb|r| for every element \verb|r| of
+  \verb|Sub(p)|.
+\item If \verb|p| is a pattern, and \verb|f| a function, then
+  \verb|lpeg.Cmt(p, f)| is a pattern; if \verb|q| denotes this
+  pattern, then \verb|Sub(q)| is the union of the singleton \verb|{q}|
+  with \verb|Sub(p)|; the order \(\leq_\mathtt{q}\) on \verb|Sub(q)|
+  is the unique one that induces the order \(\leq_\mathtt{q}\) on
+  \verb|Sub(p)|, and satisfies the condition \verb|q| \(<_\mathtt{q}\)
+  \verb|r| for every element \verb|r| of \verb|Sub(p)|.
+\end{enumerate}
+
 
 A \emph{pattern} is a function
 \(p : \mathcal{S} \to \mathcal{S} \cup \{\bot\}\) whose value at any
